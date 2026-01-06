@@ -1,8 +1,7 @@
-
 import { scene } from './scene';
 import * as THREE from 'three';
 import { roomConfigs } from './room';
-import { ROOM_SIZE, ROOM_HEIGHT } from '../constants/constants';
+import { ROOM_SIZE, ROOM_HEIGHT } from '../constants/constant';
 import { RoomOrigin } from '../interface/interface';
 
 const roomOrigins: { [key: number]: RoomOrigin } = {}; 

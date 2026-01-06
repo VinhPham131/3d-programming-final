@@ -1,4 +1,4 @@
-import { ROOM_SIZE } from '../constants/constants';
+import { ROOM_SIZE } from '../constants/constant';
 const ROOM_HALF = ROOM_SIZE / 2;
 
 export const roomConfigs = [
