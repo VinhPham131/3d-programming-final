@@ -3,7 +3,7 @@ import { camera } from '../core/camera';
 import * as THREE from 'three';
 import { door } from '../objects/door';
 import { getRoomOrigin, getRoomSize, getDoorWorldPosition } from '../core/roomManager';
-import { puzzleState } from '../constants/constants';
+import { puzzleState } from '../constants/constant';
 export const controls = new PointerLockControls(camera, document.body);
 
 const instructions = document.getElementById('instructions');
@@ -229,4 +229,3 @@ export function updateControls(delta : any) {
         camera.position.z = roomOrigin.z + roomHalf - safeMargin;
     }
 }
-

@@ -1,4 +1,39 @@
+import { scene } from '../core/scene';
+import { getDoorPosition, getRoomSize, getRoomOrigin } from '../core/roomManager';
+import * as THREE from 'three';
 
+const frameGeometry = new THREE.BoxGeometry(1.2, 2.2, 0.3);
+const frameMaterial = new THREE.MeshStandardMaterial({
+    color: 0x654321,
+    roughness: 0.6,
+    metalness: 0.1
+});
+let frame = new THREE.Mesh(frameGeometry, frameMaterial);
+frame.castShadow = true;
+frame.receiveShadow = true;
+scene.add(frame);
+
+export const door = new THREE.Mesh(
+    new THREE.BoxGeometry(1, 2, 0.2),
+    new THREE.MeshStandardMaterial({
+        color: 0x8B4513,
+        metalness: 0.2,
+        roughness: 0.6
+    })
+);
+door.name = 'door';
+door.userData.isOpen = false;
+door.userData.openAngle = 0;
+door.userData.doorDirection = 'south';
+door.castShadow = true;
+door.receiveShadow = true;
+scene.add(door);
+
+const handleGeometry = new THREE.CylinderGeometry(0.05, 0.05, 0.1, 16);
+const handleMaterial = new THREE.MeshStandardMaterial({
+    color: 0xC0C0C0,
+    metalness: 0.9,
+    roughness: 0.1
 });
 const handle = new THREE.Mesh(handleGeometry, handleMaterial);
 handle.position.set(0.4, 0, 0.11);
@@ -15,7 +50,7 @@ const lock = new THREE.Mesh(lockGeometry, lockMaterial);
 lock.position.set(-0.3, 0, 0.11);
 door.add(lock);
 
-export function setupDoor(roomId : number) {
+export function setupDoor(roomId: number) {
     const localDoorPos = getDoorPosition(roomId);
     const origin = getRoomOrigin(roomId);
     const doorPos = { x: localDoorPos.x + origin.x, z: localDoorPos.z + origin.z };
@@ -27,7 +62,7 @@ export function setupDoor(roomId : number) {
     let rotationY = 0;
 
     if (Math.abs(localDoorPos.z + roomHalf) < threshold) {
-        direction = 'south'; 
+        direction = 'south';
         rotationY = 0;
     } else if (Math.abs(localDoorPos.z - roomHalf) < threshold) {
         direction = 'north';
@@ -70,7 +105,7 @@ export function openDoor() {
     door.material.emissiveIntensity = 0.3;
 }
 
-export function animateDoor(delta : any) {
+export function animateDoor(delta: any) {
     if (door.userData.isOpen && door.userData.openAngle < Math.PI / 2) {
         door.userData.openAngle += delta * 2;
         door.userData.openAngle = Math.min(door.userData.openAngle, Math.PI / 2);
