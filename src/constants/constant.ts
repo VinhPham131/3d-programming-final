@@ -13,4 +13,8 @@ export const puzzleState = {
     gameOver: false,
     puzzleSolved: false,
     puzzleType: null 
-};
+}                                          
+
+export const MAX_INTERACTION_DISTANCE = 6.0;
+
+export const MAX_RAYCAST_DISTANCE = 8.0;
