@@ -8,6 +8,8 @@ import { createFurniture } from './objects/furniture';
 import { createRoom, createWorldGrid, getRoomConfig, getStartPosition, getTotalRooms } from './core/roomManager';
 import { updateHUD, showMessage, showGameOver, hideGameOver, showVictory, hideVictory } from './hud/hud';
 import { initAudio, playBackgroundMusic, playVictorySound, playGameOverSound} from './audio/audioManager';
+import { updateNearbyObjects } from './interaction/raycaster';
+import { createKeys, animateKeys } from './objects/keyManager';
 import { spawnNPC, updateNPC, removeNPC } from './objects/npc';
 import { door, animateDoor, setupDoor } from './objects/door';
 
@@ -38,11 +40,16 @@ window.addEventListener('doorEntered', () => {
   }
 });
 
+window.addEventListener('puzzleSolved', () => {
+  console.log('Puzzle solved! Spawning key...');
+  createKeys();
+});
+
 if (puzzleState.currentRoom >= 3) {
   const startPos = getStartPosition(puzzleState.currentRoom);
   const npcStartPos = {
-    x: startPos.x + 6, // Tăng từ 2 lên 6 - xa hơn nhiều
-    z: startPos.z + 6  // Tăng từ 2 lên 6 - xa hơn nhiều
+    x: startPos.x + 6, // Tﾄハg t盻ｫ 2 lﾃｪn 6 - xa hﾆ｡n nhi盻「
+    z: startPos.z + 6  // Tﾄハg t盻ｫ 2 lﾃｪn 6 - xa hﾆ｡n nhi盻「
   };
   spawnNPC(npcStartPos as THREE.Vector3);
 }
@@ -86,7 +93,7 @@ function transitionToNextRoom() {
       totalRooms: getTotalRooms()
     });
 
-    console.log(`🎉 VICTORY! Completed ${getTotalRooms()} rooms in ${totalTime}s`);
+    console.log(`脂 VICTORY! Completed ${getTotalRooms()} rooms in ${totalTime}s`);
     return;
   }
 
@@ -125,6 +132,7 @@ function animate() {
   requestAnimationFrame(animate);
   
   const delta = clock.getDelta();
+  const elapsed = clock.getElapsedTime();
   const currentTime = performance.now();
 
   if (puzzleState.hasKey && puzzleState.keysCollected >= puzzleState.keysRequired && door.userData.isOpen && !doorOpened) {
@@ -152,10 +160,12 @@ function animate() {
   if (puzzleState.currentRoom >= 3) {
     updateNPC(delta);
   }
-  
+
+  animateKeys(elapsed);
   updateControls(delta);
   animateDoor(delta);
   updateHUD();
+  updateNearbyObjects();
   renderer.render(scene, camera);
 }
 
