@@ -4,9 +4,11 @@ import { renderer } from './core/renderer';
 import './core/lights';
 import { updateControls } from './controls/fpsControls';
 import { puzzleState } from './constants/constant';
+import { createFurniture } from './objects/furniture';
 import { createRoom, createWorldGrid, getRoomConfig, getStartPosition, getTotalRooms } from './core/roomManager';
 import { updateHUD, showMessage, showGameOver, hideGameOver, showVictory, hideVictory } from './hud/hud';
 import { initAudio, playBackgroundMusic, playVictorySound, playGameOverSound} from './audio/audioManager';
+import { spawnNPC, updateNPC, removeNPC } from './objects/npc';
 import { door, animateDoor, setupDoor } from './objects/door';
 
 import * as THREE from 'three';
@@ -36,11 +38,21 @@ window.addEventListener('doorEntered', () => {
   }
 });
 
+if (puzzleState.currentRoom >= 3) {
+  const startPos = getStartPosition(puzzleState.currentRoom);
+  const npcStartPos = {
+    x: startPos.x + 6, // Tăng từ 2 lên 6 - xa hơn nhiều
+    z: startPos.z + 6  // Tăng từ 2 lên 6 - xa hơn nhiều
+  };
+  spawnNPC(npcStartPos as THREE.Vector3);
+}
+
 try { 
   (window as any).currentRoomId = puzzleState.currentRoom;
   createWorldGrid(3, 2, 1.0);
   createRoom(puzzleState.currentRoom);
   setupDoor(puzzleState.currentRoom);
+  createFurniture(puzzleState.currentRoom);
   
   const startPos = getStartPosition(puzzleState.currentRoom);
   camera.position.set(startPos.x, startPos.y, startPos.z);
@@ -63,6 +75,8 @@ function transitionToNextRoom() {
     puzzleState.gameOver = true;
     puzzleState.gameStarted = false;
 
+    removeNPC();
+
     const totalTime = Math.floor((performance.now() - gameStartTime) / 1000);
 
     playVictorySound();
@@ -80,11 +94,23 @@ function transitionToNextRoom() {
 
   createRoom(puzzleState.currentRoom);
   setupDoor(puzzleState.currentRoom);
+  createFurniture(puzzleState.currentRoom);
 
   const startPos = getStartPosition(puzzleState.currentRoom);
   camera.position.set(startPos.x, startPos.y, startPos.z);
 
   showMessage('A companion joins you!', 2000);
+
+  if (puzzleState.currentRoom >= 3) {
+    const npcStartPos = {
+      x: startPos.x + 6,
+      z: startPos.z + 6
+    };
+    spawnNPC(npcStartPos as THREE.Vector3);
+    showMessage('A companion joins you!', 2000);
+  } else {
+    removeNPC();
+  }
 
   roomCompleted = false;
   doorOpened = false;
@@ -122,6 +148,10 @@ function animate() {
       }
     }
   }
+
+  if (puzzleState.currentRoom >= 3) {
+    updateNPC(delta);
+  }
   
   updateControls(delta);
   animateDoor(delta);
@@ -140,9 +170,16 @@ function restartGame() {
 
   createRoom(puzzleState.currentRoom);
   setupDoor(puzzleState.currentRoom);
+  createFurniture(puzzleState.currentRoom);
 
   const startPos = getStartPosition(puzzleState.currentRoom);
   camera.position.set(startPos.x, startPos.y, startPos.z);
+
+  removeNPC();
+  if (puzzleState.currentRoom >= 3) {
+    const npcStartPos = { x: startPos.x + 6, z: startPos.z + 6 };
+    spawnNPC(npcStartPos as THREE.Vector3);
+  }
 
   puzzleState.gameOver = false;
   puzzleState.gameStarted = true;
