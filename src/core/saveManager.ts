@@ -1,8 +1,5 @@
-const SAVE_KEY = 'gameSavePoint';
-
-export interface SaveData {
-    lastCompletedRoom: number;
-}
+import { SAVE_KEY } from '../constants/constant';
+import { SaveData } from '../interface/interface';
 
 export function saveProgress(roomNumber: number): void {
     try {
