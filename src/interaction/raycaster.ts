@@ -9,6 +9,7 @@ import { removeKey } from '../objects/keyManager';
 import { getRoomConfig } from '../core/roomManager';
 import { playKeyPickupSound, playDoorOpenSound } from '../audio/audioManager';
 import { MAX_INTERACTION_DISTANCE, MAX_RAYCAST_DISTANCE } from '../constants/constant';
+import { checkPuzzleInteraction } from '../puzzle/puzzleManager';
 
 const raycaster = new THREE.Raycaster();
 let highlightedObject: THREE.Object3D | null = null;
@@ -135,6 +136,12 @@ window.addEventListener('keydown', (event) => {
 
     const { object } = nearbyInteractable;
 
+    if (object.name.startsWith('puzzle_')) {
+        const handled = checkPuzzleInteraction(object);
+        if (handled) {
+            return;
+        }
+    }
 
     // Handle key pickup
     if (object.name === 'key') {

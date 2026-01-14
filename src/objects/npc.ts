@@ -1,7 +1,9 @@
 import { scene } from '../core/scene';
 import { camera } from '../core/camera';
 import * as THREE from 'three';
-import { playNPCChaseSound } from '../audio/audioManager';
+import { playGameOverSound, playNPCChaseSound } from '../audio/audioManager';
+import { puzzleState } from '../constants/constant';
+import { showGameOver } from '../hud/hud';
 
 let npc: THREE.Object3D | null = null;
 let npcAnimation: { time: number, baseY: number } | null = null;
@@ -120,6 +122,15 @@ export function updateNPC(delta: number) {
     const distance = direction.length();
 
     const captureDistance = 0.8;
+    if (distance < captureDistance && !puzzleState.gameOver) {
+        puzzleState.gameOver = true;
+        puzzleState.gameStarted = false;
+        playGameOverSound();
+        showGameOver('You were caught by the NPC!');
+        console.log('Player caught by NPC! Game Over.');
+        return;
+    }
+    
     if (distance < 3 && distance > captureDistance) {
         playNPCChaseSound();
     }
@@ -180,4 +191,3 @@ export function removeNPC() {
 export function getNPC() {
     return npc;
 }
-
