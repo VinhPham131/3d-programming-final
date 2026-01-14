@@ -3,9 +3,6 @@ import { puzzleState } from '../constants/constant';
 import { getRoomConfig, getTotalRooms } from '../core/roomManager';
 
 let messageTimeout: ReturnType<typeof setTimeout> | null = null;
-const stats = {
-    totalTime : null
-}
 
 export function updateHUD() {
     const hudElement = document.getElementById('hud');
