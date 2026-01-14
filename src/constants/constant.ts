@@ -2,6 +2,9 @@ export const ROOM_SIZE = 16;
 
 export const ROOM_HEIGHT = 5;
 
+export const SAVE_KEY = 'gameSavePoint';
+
+
 export const puzzleState = {
     hasKey: false,
     currentRound: 1,
