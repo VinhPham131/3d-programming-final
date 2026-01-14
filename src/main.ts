@@ -14,6 +14,7 @@ import { spawnNPC, updateNPC, removeNPC } from './objects/npc';
 import { door, animateDoor, setupDoor } from './objects/door';
 import {createColorPuzzle, createNumberPuzzle, createPatternPuzzle, createHiddenObjectsPuzzle, updatePuzzle, cleanupPuzzle} from './puzzle/puzzleManager';
 import { resetRound, nextRoom } from './puzzle/puzzleState';
+import { saveProgress, loadSavePoint, clearSavePoint } from './core/saveManager';
 
 import * as THREE from 'three';
 
@@ -57,6 +58,9 @@ if (puzzleState.currentRoom >= 3) {
 }
 
 try { 
+  clearSavePoint();
+  puzzleState.currentRoom = 1;
+
   (window as any).currentRoomId = puzzleState.currentRoom;
   createWorldGrid(3, 2, 1.0);
   createRoom(puzzleState.currentRoom);
@@ -110,6 +114,8 @@ function transitionToNextRoom() {
     puzzleState.gameOver = true;
     puzzleState.gameStarted = false;
 
+    clearSavePoint();
+
     removeNPC();
 
     const totalTime = Math.floor((performance.now() - gameStartTime) / 1000);
@@ -125,7 +131,10 @@ function transitionToNextRoom() {
     return;
   }
 
+  const completedRoom = puzzleState.currentRoom;
+  
   nextRoom();
+  saveProgress(puzzleState.currentRoom);
   (window as any).currentRoomId = puzzleState.currentRoom;
 
   createRoom(puzzleState.currentRoom);
@@ -207,7 +216,8 @@ function restartGame() {
   console.log('Restarting game...');
   cleanupPuzzle();
 
-  puzzleState.currentRoom = 1;
+  const savedRoom = loadSavePoint();
+  puzzleState.currentRoom = savedRoom;
   puzzleState.currentRound = 1;
   resetRound();
   (window as any).currentRoomId = puzzleState.currentRoom;
@@ -235,7 +245,7 @@ function restartGame() {
   hideGameOver();
   hideVictory();
 
-  showMessage('Game restarted. Good luck!', 2000);
+  showMessage(`Game restarted from Room ${savedRoom}. Good luck!`, 2000);
 }
 
 (window as any).restartGame = restartGame;
