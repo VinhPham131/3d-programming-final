@@ -130,8 +130,6 @@ function transitionToNextRoom() {
     console.log(`脂 VICTORY! Completed ${getTotalRooms()} rooms in ${totalTime}s`);
     return;
   }
-
-  const completedRoom = puzzleState.currentRoom;
   
   nextRoom();
   saveProgress(puzzleState.currentRoom);
