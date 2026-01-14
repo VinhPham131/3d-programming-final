@@ -3,7 +3,7 @@ import { camera } from './core/camera';
 import { renderer } from './core/renderer';
 import './core/lights';
 import { updateControls } from './controls/fpsControls';
-import { puzzleState } from './constants/constant';
+import { puzzleState, puzzleTypes } from './constants/constant';
 import { createFurniture } from './objects/furniture';
 import { createRoom, createWorldGrid, getRoomConfig, getStartPosition, getTotalRooms } from './core/roomManager';
 import { updateHUD, showMessage, showGameOver, hideGameOver, showVictory, hideVictory } from './hud/hud';
@@ -12,6 +12,8 @@ import { updateNearbyObjects } from './interaction/raycaster';
 import { createKeys, animateKeys } from './objects/keyManager';
 import { spawnNPC, updateNPC, removeNPC } from './objects/npc';
 import { door, animateDoor, setupDoor } from './objects/door';
+import {createColorPuzzle, createNumberPuzzle, createPatternPuzzle, createHiddenObjectsPuzzle, updatePuzzle, cleanupPuzzle} from './puzzle/puzzleManager';
+import { resetRound, nextRoom } from './puzzle/puzzleState';
 
 import * as THREE from 'three';
 
@@ -48,8 +50,8 @@ window.addEventListener('puzzleSolved', () => {
 if (puzzleState.currentRoom >= 3) {
   const startPos = getStartPosition(puzzleState.currentRoom);
   const npcStartPos = {
-    x: startPos.x + 6, // Tﾄハg t盻ｫ 2 lﾃｪn 6 - xa hﾆ｡n nhi盻「
-    z: startPos.z + 6  // Tﾄハg t盻ｫ 2 lﾃｪn 6 - xa hﾆ｡n nhi盻「
+    x: startPos.x + 6,
+    z: startPos.z + 6
   };
   spawnNPC(npcStartPos as THREE.Vector3);
 }
@@ -60,6 +62,8 @@ try {
   createRoom(puzzleState.currentRoom);
   setupDoor(puzzleState.currentRoom);
   createFurniture(puzzleState.currentRoom);
+  initPuzzleForRoom(puzzleState.currentRoom);
+  resetRound();
   
   const startPos = getStartPosition(puzzleState.currentRoom);
   camera.position.set(startPos.x, startPos.y, startPos.z);
@@ -76,6 +80,30 @@ const gameStartTime = performance.now();
 let roomCompleted = false;
 let doorOpened = false;
 let lastTime = performance.now();
+
+function initPuzzleForRoom(roomNumber: number) {
+  cleanupPuzzle(); // Clean up previous puzzle
+
+  const puzzleType = puzzleTypes[roomNumber % Object.keys(puzzleTypes).length + 1];
+  puzzleState.puzzleType = puzzleType;
+
+  switch (puzzleType) {
+    case 'color':
+      createColorPuzzle(roomNumber);
+      break;
+    case 'number':
+      createNumberPuzzle(roomNumber);
+      break;
+    case 'pattern':
+      createPatternPuzzle(roomNumber);
+      break;
+    case 'hidden':
+      createHiddenObjectsPuzzle(roomNumber);
+      break;
+    default:
+      createColorPuzzle(roomNumber);
+  }
+}
 
 function transitionToNextRoom() {
   if (puzzleState.currentRoom >= getTotalRooms()) {
@@ -97,6 +125,7 @@ function transitionToNextRoom() {
     return;
   }
 
+  nextRoom();
   (window as any).currentRoomId = puzzleState.currentRoom;
 
   createRoom(puzzleState.currentRoom);
@@ -107,6 +136,8 @@ function transitionToNextRoom() {
   camera.position.set(startPos.x, startPos.y, startPos.z);
 
   showMessage('A companion joins you!', 2000);
+
+  initPuzzleForRoom(puzzleState.currentRoom);
 
   if (puzzleState.currentRoom >= 3) {
     const npcStartPos = {
@@ -166,6 +197,7 @@ function animate() {
   animateDoor(delta);
   updateHUD();
   updateNearbyObjects();
+  updatePuzzle(delta);
   renderer.render(scene, camera);
 }
 
@@ -173,15 +205,18 @@ animate();
 
 function restartGame() {
   console.log('Restarting game...');
+  cleanupPuzzle();
 
   puzzleState.currentRoom = 1;
   puzzleState.currentRound = 1;
+  resetRound();
   (window as any).currentRoomId = puzzleState.currentRoom;
 
   createRoom(puzzleState.currentRoom);
   setupDoor(puzzleState.currentRoom);
   createFurniture(puzzleState.currentRoom);
 
+  initPuzzleForRoom(puzzleState.currentRoom);
   const startPos = getStartPosition(puzzleState.currentRoom);
   camera.position.set(startPos.x, startPos.y, startPos.z);
 
@@ -204,3 +239,9 @@ function restartGame() {
 }
 
 (window as any).restartGame = restartGame;
+
+window.addEventListener('keydown', (event) => {
+  if (event.code === 'KeyR' && puzzleState.gameOver) {
+    restartGame();
+  }
+});
