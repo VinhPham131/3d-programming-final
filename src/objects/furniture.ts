@@ -139,19 +139,6 @@ const clockFaceMaterial = new THREE.MeshStandardMaterial({
     roughness: 0.7
 });
 
-const paintingFrameGeometry = new THREE.BoxGeometry(1.2, 1.5, 0.15);
-const paintingFrameMaterial = new THREE.MeshStandardMaterial({
-    color: 0x8B6914,
-    roughness: 0.4,
-    metalness: 0.3
-});
-const paintingCanvasGeometry = new THREE.PlaneGeometry(1.0, 1.3);
-const paintingCanvasMaterials = [
-    new THREE.MeshStandardMaterial({ color: 0x8B7355 }),
-    new THREE.MeshStandardMaterial({ color: 0x6B5B4A }),
-    new THREE.MeshStandardMaterial({ color: 0x7A6B5A }),
-    new THREE.MeshStandardMaterial({ color: 0x5A4A3A })
-];
 
 function createTable(pos : THREE.Vector3) {
     const table = new THREE.Mesh(tableGeometry, tableMaterial.clone());
@@ -339,26 +326,6 @@ function createVase(pos : THREE.Vector3) {
     }
 }
 
-function createPainting(pos : THREE.Vector3, rotation : number) {
-    const paintingGroup = new THREE.Group();
-    paintingGroup.position.set(pos.x, pos.y, pos.z);
-    paintingGroup.rotation.y = rotation;
-
-    // Frame
-    const frame = new THREE.Mesh(paintingFrameGeometry, paintingFrameMaterial.clone());
-    frame.castShadow = true;
-    frame.receiveShadow = true;
-    paintingGroup.add(frame);
-
-    // Canvas
-    const canvasMaterial = paintingCanvasMaterials[Math.floor(Math.random() * paintingCanvasMaterials.length)].clone();
-    const canvas = new THREE.Mesh(paintingCanvasGeometry, canvasMaterial);
-    canvas.position.set(0, 0, 0.08);
-    paintingGroup.add(canvas);
-
-    scene.add(paintingGroup);
-    furnitureObjects.push(paintingGroup);
-}
 
 function createStatue(pos : THREE.Vector3) {
     const statueGroup = new THREE.Group();
@@ -670,7 +637,6 @@ export function createFurniture(roomId : number) {
                 else if (item.type === 'bookshelf') createBookshelf(pos as THREE.Vector3);
                 else if (item.type === 'chair') createChair(pos as THREE.Vector3);
                 else if (item.type === 'vase') createVase(pos as THREE.Vector3);
-                else if (item.type === 'painting') createPainting(pos as THREE.Vector3, item.rotation || 0);
                 else if (item.type === 'statue') createStatue(pos as THREE.Vector3);
                 else if (item.type === 'lamp') createLamp(pos as THREE.Vector3);
                 else if (item.type === 'plant') createPlant(pos as THREE.Vector3);
@@ -698,7 +664,6 @@ export function createFurniture(roomId : number) {
             else if (item.type === 'bookshelf') createBookshelf(basePos as THREE.Vector3);
             else if (item.type === 'chair') createChair(basePos as THREE.Vector3);
             else if (item.type === 'vase') createVase(basePos as THREE.Vector3);
-            else if (item.type === 'painting') createPainting(basePos as THREE.Vector3, item.rotation || 0);
             else if (item.type === 'statue') createStatue(basePos as THREE.Vector3);
             else if (item.type === 'lamp') createLamp(basePos as THREE.Vector3);
             else if (item.type === 'plant') createPlant(basePos as THREE.Vector3);
