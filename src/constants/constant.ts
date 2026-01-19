@@ -20,8 +20,8 @@ export const MAX_INTERACTION_DISTANCE = 6.0;
 export const MAX_RAYCAST_DISTANCE = 8.0;
 
 export const puzzleTypes: { [key: number]: string } = {
-    1: 'color',
-    2: 'number',
+    1: 'number',
+    2: 'color',
     3: 'pattern',
     4: 'hidden',
     5: 'sound',

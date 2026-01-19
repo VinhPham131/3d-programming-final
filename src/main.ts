@@ -82,9 +82,9 @@ let doorOpened = false;
 let lastTime = performance.now();
 
 function initPuzzleForRoom(roomNumber: number) {
-  cleanupPuzzle(); // Clean up previous puzzle
+  cleanupPuzzle();
 
-  const puzzleType = puzzleTypes[roomNumber % Object.keys(puzzleTypes).length + 1];
+  const puzzleType = puzzleTypes[roomNumber] || puzzleTypes[((roomNumber - 1) % 6) + 1];
   puzzleState.puzzleType = puzzleType;
 
   switch (puzzleType) {
@@ -120,8 +120,6 @@ function transitionToNextRoom() {
       totalTime: totalTime,
       totalRooms: getTotalRooms()
     });
-
-    console.log(`脂 VICTORY! Completed ${getTotalRooms()} rooms in ${totalTime}s`);
     return;
   }
 

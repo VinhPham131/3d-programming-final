@@ -3,25 +3,7 @@ import { scene } from '../core/scene';
 import { showMessage } from '../hud/hud';
 import { puzzleState } from '../constants/constant';
 import { getRoomOrigin } from '../core/roomManager';
-import { RoomOrigin } from '../interface/interface';
-
-type PuzzleType = 'color' | 'number' | 'pattern' | 'hidden' | null;
-
-interface ColorData {
-    name: string;
-    color: number;
-    emissive: number;
-}
-
-interface PuzzleState {
-    type: PuzzleType;
-    sequence: (ColorData | number)[];
-    playerSequence: (string | number)[];
-    objects: THREE.Object3D[];
-    completed: boolean;
-    attempts: number;
-    totalItems?: number;
-}
+import { RoomOrigin, ColorData, MathData, PuzzleState, PuzzleType } from '../interface/interface';
 
 let currentPuzzle: PuzzleState = {
     type: null,
@@ -113,13 +95,38 @@ export function createColorPuzzle(roomNumber: number) {
 }
 
 export function createNumberPuzzle(roomNumber: number) {
-    const code = generateCode(4);
+    const a = Math.floor(Math.random() * 9) + 1;
+    const b = Math.floor(Math.random() * 9) + 1;
+    const c = Math.floor(Math.random() * 9) + 1;
+    const d = Math.floor(Math.random() * 9) + 1;
+
+    const eq1 = a + b;
+    const eq2 = a * 2;
+    const eq3 = b + c;
+    const eq4 = c - d;
+
+    const mathData: MathData = {
+        a,
+        b,
+        c,
+        d,
+        equations: [
+            `a + b = ${eq1}`,
+            `2a = ${eq2}`,
+            `b + c = ${eq3}`,
+            `c - d = ${eq4}`
+        ],
+        finalCode: parseInt(`${a}${b}${c}${d}`)
+    };
+
+    const code = [mathData.finalCode];
 
     currentPuzzle.type = 'number';
     currentPuzzle.sequence = code;
     currentPuzzle.playerSequence = [];
     currentPuzzle.completed = false;
     currentPuzzle.objects = [];
+    currentPuzzle.userData = { mathData };
 
     const roomOrigin = getRoomOrigin(roomNumber);
     const baseZ = roomOrigin.z - 7;
@@ -144,13 +151,13 @@ export function createNumberPuzzle(roomNumber: number) {
         currentPuzzle.objects.push(button);
     });
 
-    const sum = code.reduce((a, b) => a + b, 0);
-    showMessage(`🔢 NUMBER PUZZLE: Aim at number and press E to enter 4-digit code (Hint: sum of digits = ${sum})`, 10000);
+    const equationsText = mathData.equations.join('\n');
+    const hintText = `Solve for a, b, c, d\nThen enter: abcd`;
+    
+    showMessage(`🧮 MATH PUZZLE: Solve the equations to find a, b, c, d. Then enter the 4-digit code (abcd)`, 12000);
 
-    createAnswerBoard(roomOrigin, `CODE: ${code.join('')}\n(Sum = ${sum})`, 'number');
+    createAnswerBoard(roomOrigin, `\n\n\n\n${equationsText}\n\n${hintText}`, 'number');
 
-    console.log('✅ Number puzzle created at room origin:', roomOrigin);
-    console.log('🔢 Code:', code.join(''), 'Sum:', sum);
 }
 
 export function createPatternPuzzle(roomNumber: number) {
@@ -360,7 +367,45 @@ function handleNumberPuzzleClick(object: THREE.Object3D): boolean {
     showMessage(`Entered: ${currentPuzzle.playerSequence.join('')}`, 1000);
     console.log('Number pressed:', number, 'Current code:', currentPuzzle.playerSequence.join(''));
 
-    if (currentPuzzle.playerSequence.length === currentPuzzle.sequence.length) {
+    if (currentPuzzle.playerSequence.length === 4) {
+        // Check if this is a math puzzle (has userData.mathData)
+        if (currentPuzzle.userData && currentPuzzle.userData.mathData) {
+            const enteredCode = parseInt(currentPuzzle.playerSequence.join(''));
+            const correctCode = currentPuzzle.userData.mathData.finalCode;
+
+            if (enteredCode === correctCode) {
+                completePuzzle();
+            } else {
+                currentPuzzle.attempts--;
+                const wrongSequence = currentPuzzle.playerSequence.join('');
+                currentPuzzle.playerSequence = [];
+
+                currentPuzzle.objects.forEach(btn => {
+                    if (btn instanceof THREE.Mesh && btn.material instanceof THREE.MeshStandardMaterial) {
+                        btn.material.emissive.setHex(0xff0000);
+                        btn.material.emissiveIntensity = 0.5;
+                    }
+                });
+                setTimeout(() => {
+                    currentPuzzle.objects.forEach(btn => {
+                        if (btn instanceof THREE.Mesh && btn.material instanceof THREE.MeshStandardMaterial) {
+                            btn.material.emissive.setHex(0x000000);
+                            btn.material.emissiveIntensity = 0;
+                        }
+                    });
+                }, 500);
+
+                if (currentPuzzle.attempts > 0) {
+                    showMessage(`✗ Wrong code (${wrongSequence})! ${currentPuzzle.attempts} attempts remaining`, 2000);
+                } else {
+                    showMessage(`✗ Puzzle failed! Restarting...`, 2000);
+                    currentPuzzle.attempts = 3;
+                }
+            }
+            return true;
+        }
+
+        // Original number puzzle logic (for non-math puzzles)
         const correct = currentPuzzle.playerSequence.every((num, idx) =>
             num === currentPuzzle.sequence[idx]
         );
