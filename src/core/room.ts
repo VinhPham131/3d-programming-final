@@ -163,8 +163,6 @@ export const roomConfigs = [
             { type: 'lamp', position: { x: 3, y: 0, z: -3 } },
             { type: 'plant', position: { x: 0, y: 0, z: 7 } },
             { type: 'plant', position: { x: 0, y: 0, z: -7 } },
-            { type: 'mirror', position: { x: -ROOM_HALF + 0.05, y: 1.5, z: 0 }, rotation: Math.PI / 2 },
-            { type: 'mirror', position: { x: ROOM_HALF - 0.05, y: 1.5, z: 0 }, rotation: -Math.PI / 2 },
             { type: 'vase', position: { x: -5, y: 0.65, z: -5 } },
             { type: 'vase', position: { x: 5, y: 0.65, z: -5 } },
             { type: 'vase', position: { x: -5, y: 0.65, z: 5 } },
