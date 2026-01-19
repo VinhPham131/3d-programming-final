@@ -31,3 +31,7 @@ export interface PuzzleState {
     totalItems?: number;
     userData?: any;
 }
+
+export interface SaveData {
+    lastCompletedRoom: number;
+}
