@@ -9,7 +9,7 @@ import { createRoom, createWorldGrid, getRoomConfig, getStartPosition, getTotalR
 import { updateHUD, showMessage, showGameOver, hideGameOver, showVictory, hideVictory } from './hud/hud';
 import { initAudio, playBackgroundMusic, playVictorySound, playGameOverSound} from './audio/audioManager';
 import { updateNearbyObjects } from './interaction/raycaster';
-import { createKeys, animateKeys } from './objects/keyManager';
+import { createKeys, animateKeys, clearKeys } from './objects/keyManager';
 import { spawnNPC, updateNPC, removeNPC } from './objects/npc';
 import { door, animateDoor, setupDoor } from './objects/door';
 import {createColorPuzzle, createNumberPuzzle, createPatternPuzzle, createHiddenObjectsPuzzle, updatePuzzle, cleanupPuzzle} from './puzzle/puzzleManager';
@@ -133,6 +133,7 @@ function transitionToNextRoom() {
   saveProgress(puzzleState.currentRoom);
   (window as any).currentRoomId = puzzleState.currentRoom;
 
+  clearKeys();
   createRoom(puzzleState.currentRoom);
   setupDoor(puzzleState.currentRoom);
   createFurniture(puzzleState.currentRoom);
@@ -211,6 +212,7 @@ animate();
 function restartGame() {
   console.log('Restarting game...');
   cleanupPuzzle();
+  clearKeys();
 
   const savedRoom = loadSavePoint();
   puzzleState.currentRoom = savedRoom;

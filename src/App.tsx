@@ -49,9 +49,9 @@ function App() {
       <div id="game-container" style={{ width: "100%", height: "100%" }} />
 
       <div id="hud">Solve puzzles to get keys!</div>
-      <div id="inventory"></div>
       <div id="timer">Time: 1:30</div>
       <div id="round">Room 1</div>
+      <div id="interactionLog"></div>
       <div id="messageBox"></div>
       <div id="crosshair"></div>
       <div id="instructions">

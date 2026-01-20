@@ -1,14 +1,15 @@
-import { inventory } from '../puzzle/inventory';
 import { puzzleState } from '../constants/constant';
 import { getRoomConfig, getTotalRooms } from '../core/roomManager';
 
 let messageTimeout: ReturnType<typeof setTimeout> | null = null;
+let interactionEntries: string[] = [];
+let interactionTitle = '';
 
 export function updateHUD() {
     const hudElement = document.getElementById('hud');
-    const inventoryElement = document.getElementById('inventory');
     const timerElement = document.getElementById('timer');
     const roundElement = document.getElementById('round');
+    const interactionElement = document.getElementById('interactionLog');
 
     if (hudElement) {
         let hudText = '';
@@ -53,13 +54,13 @@ export function updateHUD() {
         hudElement.innerHTML = hudText;
     }
 
-    if (inventoryElement) {
-        if (inventory.length > 0) {
-            inventoryElement.innerHTML = '<strong>Found:</strong><br>' +
-                inventory.map(item => `• ${item}`).join('<br>');
-            inventoryElement.style.display = 'block';
+    if (interactionElement) {
+        if (interactionTitle) {
+            const content = interactionEntries.length > 0 ? interactionEntries.join(', ') : '—';
+            interactionElement.innerHTML = `<strong>${interactionTitle}</strong><br>${content}`;
+            interactionElement.style.display = 'block';
         } else {
-            inventoryElement.style.display = 'none';
+            interactionElement.style.display = 'none';
         }
     }
 
@@ -82,6 +83,16 @@ export function updateHUD() {
         const roomConfig = getRoomConfig(puzzleState.currentRoom);
         roundElement.textContent = `${roomConfig.name} (Room ${puzzleState.currentRoom}/${getTotalRooms()})`;
     }
+}
+
+export function setInteractionLog(entries: Array<string | number>, title: string) {
+    interactionEntries = entries.map(entry => String(entry));
+    interactionTitle = title;
+}
+
+export function clearInteractionLog() {
+    interactionEntries = [];
+    interactionTitle = '';
 }
 
 export function showMessage(text : string, duration = 2000) {

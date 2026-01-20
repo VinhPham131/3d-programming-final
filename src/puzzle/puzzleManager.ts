@@ -1,6 +1,6 @@
 import * as THREE from 'three';
 import { scene } from '../core/scene';
-import { showMessage } from '../hud/hud';
+import { showMessage, setInteractionLog, clearInteractionLog } from '../hud/hud';
 import { puzzleState } from '../constants/constant';
 import { getRoomOrigin } from '../core/roomManager';
 import { RoomOrigin, ColorData, MathData, PuzzleState, PuzzleType } from '../interface/interface';
@@ -14,6 +14,66 @@ let currentPuzzle: PuzzleState = {
     attempts: 3
 };
 
+let tileInteractionLog: string[] = [];
+
+interface BonusCrystalsState {
+    enabled: boolean;
+    total: number;
+    collected: number;
+    objects: THREE.Object3D[];
+}
+
+let bonusCrystals: BonusCrystalsState = {
+    enabled: false,
+    total: 0,
+    collected: 0,
+    objects: []
+};
+
+function clearBonusCrystals() {
+    bonusCrystals.objects.forEach(obj => scene.remove(obj));
+    bonusCrystals.objects = [];
+    bonusCrystals.enabled = false;
+    bonusCrystals.total = 0;
+    bonusCrystals.collected = 0;
+}
+
+function setupBonusCrystals(roomNumber: number) {
+    clearBonusCrystals();
+    bonusCrystals.enabled = true;
+    bonusCrystals.total = 5;
+    bonusCrystals.collected = 0;
+
+    const roomOrigin = getRoomOrigin(roomNumber);
+    const positions = [
+        { x: roomOrigin.x - 5.5, y: 1.0, z: roomOrigin.z - 5.5 },
+        { x: roomOrigin.x + 5.5, y: 1.0, z: roomOrigin.z - 5.5 },
+        { x: roomOrigin.x - 5.5, y: 1.0, z: roomOrigin.z + 5.5 },
+        { x: roomOrigin.x + 5.5, y: 1.0, z: roomOrigin.z + 5.5 },
+        { x: roomOrigin.x + 0, y: 1.4, z: roomOrigin.z + 0 }
+    ];
+
+    positions.forEach((pos, index) => {
+        const geometry = new THREE.OctahedronGeometry(0.25);
+        const material = new THREE.MeshStandardMaterial({
+            color: 0xffd700,
+            emissive: 0xffd700,
+            emissiveIntensity: 0.8,
+            metalness: 0.9,
+            roughness: 0.1
+        });
+
+        const item = new THREE.Mesh(geometry, material);
+        item.position.set(pos.x, pos.y, pos.z);
+        item.name = 'puzzle_hidden_item';
+        item.userData.itemIndex = index;
+        item.userData.rotationSpeed = 0.01 + Math.random() * 0.02;
+
+        scene.add(item);
+        bonusCrystals.objects.push(item);
+    });
+}
+
 export function createColorPuzzle(roomNumber: number) {
     const colors: ColorData[] = [
         { name: 'RED', color: 0xff0000, emissive: 0xff0000 },
@@ -23,16 +83,18 @@ export function createColorPuzzle(roomNumber: number) {
     ];
 
     const sequence: ColorData[] = [];
-    for (let i = 0; i < 4; i++) {
-        sequence.push(colors[i]);
+    const sequenceLength = 5;
+    for (let i = 0; i < sequenceLength; i++) {
+        sequence.push(colors[Math.floor(Math.random() * colors.length)]);
     }
-    shuffleArray(sequence);
 
     currentPuzzle.type = 'color';
     currentPuzzle.sequence = sequence;
     currentPuzzle.playerSequence = [];
     currentPuzzle.completed = false;
     currentPuzzle.objects = [];
+    setInteractionLog([], 'Recent colors');
+    clearBonusCrystals();
 
     const roomOrigin = getRoomOrigin(roomNumber);
 
@@ -62,7 +124,7 @@ export function createColorPuzzle(roomNumber: number) {
         { x: roomOrigin.x + 5, y: 1.5, z: roomOrigin.z + 5 }
     ];
 
-    sequence.forEach((colorData, index) => {
+    colors.forEach((colorData, index) => {
         const geometry = new THREE.SphereGeometry(0.3, 16, 16);
         const material = new THREE.MeshStandardMaterial({
             color: colorData.color,
@@ -119,13 +181,15 @@ export function createNumberPuzzle(roomNumber: number) {
         finalCode: parseInt(`${a}${b}${c}${d}`)
     };
 
-    const code = [mathData.finalCode];
+    const code = [a, b, c, d];
 
     currentPuzzle.type = 'number';
     currentPuzzle.sequence = code;
     currentPuzzle.playerSequence = [];
     currentPuzzle.completed = false;
     currentPuzzle.objects = [];
+    setInteractionLog([], 'Recent numbers');
+    clearBonusCrystals();
     currentPuzzle.userData = { mathData };
 
     const roomOrigin = getRoomOrigin(roomNumber);
@@ -173,6 +237,9 @@ export function createPatternPuzzle(roomNumber: number) {
     currentPuzzle.playerSequence = [];
     currentPuzzle.completed = false;
     currentPuzzle.objects = [];
+    setInteractionLog([], 'Recent tiles');
+    tileInteractionLog = [];
+    clearBonusCrystals();
 
     const roomOrigin = getRoomOrigin(roomNumber);
 
@@ -222,19 +289,21 @@ export function createHiddenObjectsPuzzle(roomNumber: number) {
     currentPuzzle.completed = false;
     currentPuzzle.objects = [];
     currentPuzzle.totalItems = itemCount;
+    setInteractionLog([], 'Items found');
+    clearBonusCrystals();
 
     const roomOrigin = getRoomOrigin(roomNumber);
 
     const positions = [
-        { x: roomOrigin.x - 6, y: 0.5, z: roomOrigin.z - 6 },
-        { x: roomOrigin.x + 6, y: 0.5, z: roomOrigin.z - 6 },
-        { x: roomOrigin.x - 6, y: 0.5, z: roomOrigin.z + 6 },
-        { x: roomOrigin.x + 6, y: 0.5, z: roomOrigin.z + 6 },
-        { x: roomOrigin.x + 0, y: 3.0, z: roomOrigin.z + 0 }
+        { x: roomOrigin.x - 5.5, y: 1.0, z: roomOrigin.z - 5.5 },
+        { x: roomOrigin.x + 5.5, y: 1.0, z: roomOrigin.z - 5.5 },
+        { x: roomOrigin.x - 5.5, y: 1.0, z: roomOrigin.z + 5.5 },
+        { x: roomOrigin.x + 5.5, y: 1.0, z: roomOrigin.z + 5.5 },
+        { x: roomOrigin.x + 0, y: 1.4, z: roomOrigin.z + 0 }
     ];
 
     positions.forEach((pos, index) => {
-        const geometry = new THREE.OctahedronGeometry(0.2);
+        const geometry = new THREE.OctahedronGeometry(0.25);
         const material = new THREE.MeshStandardMaterial({
             color: 0xffd700,
             emissive: 0xffd700,
@@ -254,22 +323,19 @@ export function createHiddenObjectsPuzzle(roomNumber: number) {
         currentPuzzle.objects.push(item);
     });
 
-    showMessage(`🔍 FIND HIDDEN ITEMS: Find and collect all ${itemCount} golden crystals hidden in the room! Walk around to find them.`, 10000);
+    showMessage(`🔍 FIND CRYSTALS: Collect all ${itemCount} golden crystals visible in the room!`, 10000);
 
-    const locationHints = [
-        'Southwest Corner',
-        'Northwest Corner',
-        'Southeast Corner',
-        'Northeast Corner',
-        'Above center of room'
-    ];
-    createAnswerBoard(roomOrigin, `LOCATION OF ${itemCount} CRYSTALS:\n` + locationHints.join('\n'), 'hidden');
+    createAnswerBoard(roomOrigin, `CRYSTALS: ALL VISIBLE IN ROOM`, 'hidden');
 
     console.log('✅ Hidden objects puzzle created at room origin:', roomOrigin);
     console.log('🔍 Item count:', itemCount, 'Positions:', positions);
 }
 
 export function checkPuzzleInteraction(object: THREE.Object3D): boolean {
+    if (bonusCrystals.enabled && object.name === 'puzzle_hidden_item') {
+        return handleBonusCrystalClick(object);
+    }
+
     if (!currentPuzzle.type || currentPuzzle.completed) return false;
 
     switch (currentPuzzle.type) {
@@ -290,7 +356,6 @@ function handleColorPuzzleClick(object: THREE.Object3D): boolean {
     if (object.name !== 'puzzle_orb') return false;
 
     const clickedColor = object.userData.colorName;
-    const expectedColor = (currentPuzzle.sequence[currentPuzzle.playerSequence.length] as ColorData).name;
 
     const colorNames: { [key: string]: string } = {
         'RED': 'RED',
@@ -299,42 +364,40 @@ function handleColorPuzzleClick(object: THREE.Object3D): boolean {
         'YELLOW': 'YELLOW'
     };
 
-    if (clickedColor === expectedColor) {
-        currentPuzzle.playerSequence.push(clickedColor);
+    currentPuzzle.playerSequence.push(clickedColor);
+    if (currentPuzzle.playerSequence.length > currentPuzzle.sequence.length) {
+        currentPuzzle.playerSequence.shift();
+    }
+    setInteractionLog(currentPuzzle.playerSequence as string[], 'Recent colors');
 
-        if (object instanceof THREE.Mesh && object.material instanceof THREE.MeshStandardMaterial) {
-            object.material.emissiveIntensity = 1.5;
-            setTimeout(() => {
-                if (object instanceof THREE.Mesh && object.material instanceof THREE.MeshStandardMaterial) {
-                    object.material.emissiveIntensity = 0.5;
-                }
-            }, 200);
-        }
+    if (object instanceof THREE.Mesh && object.material instanceof THREE.MeshStandardMaterial) {
+        object.material.emissiveIntensity = 1.5;
+        setTimeout(() => {
+            if (object instanceof THREE.Mesh && object.material instanceof THREE.MeshStandardMaterial) {
+                object.material.emissiveIntensity = 0.5;
+            }
+        }, 200);
+    }
 
-        showMessage(`✓ ${colorNames[clickedColor]} (${currentPuzzle.playerSequence.length}/${currentPuzzle.sequence.length})`, 1000);
+    const sequenceNames = (currentPuzzle.sequence as ColorData[]).map(color => color.name);
+    const isCompleteAttempt = currentPuzzle.playerSequence.length === sequenceNames.length;
+    const matchesSequence = isCompleteAttempt &&
+        currentPuzzle.playerSequence.every((color, index) => color === sequenceNames[index]);
 
-        if (currentPuzzle.playerSequence.length === currentPuzzle.sequence.length) {
+    if (matchesSequence) {
+        if (puzzleState.currentRoom === 5) {
+            currentPuzzle.completed = true;
+            setupBonusCrystals(puzzleState.currentRoom);
+            setInteractionLog([`0/${bonusCrystals.total}`], 'Crystals found');
+            showMessage(`✅ Colors correct! Collect crystals (0/${bonusCrystals.total})`, 2000);
+        } else {
             completePuzzle();
         }
     } else {
-        currentPuzzle.attempts--;
-        currentPuzzle.playerSequence = [];
-
-        if (object instanceof THREE.Mesh && object.material instanceof THREE.MeshStandardMaterial) {
-            const colorData = object.userData.colorData as ColorData;
-            object.material.color.setHex(0xff0000);
-            setTimeout(() => {
-                if (object instanceof THREE.Mesh && object.material instanceof THREE.MeshStandardMaterial) {
-                    object.material.color.setHex(colorData.color);
-                }
-            }, 500);
-        }
-
-        if (currentPuzzle.attempts > 0) {
-            showMessage(`✗ Wrong! Start over. ${currentPuzzle.attempts} attempts remaining`, 2000);
-        } else {
-            showMessage(`✗ Puzzle failed! Restarting...`, 2000);
-            currentPuzzle.attempts = 3;
+        showMessage(`${colorNames[clickedColor]}`, 800);
+        if (isCompleteAttempt) {
+            currentPuzzle.playerSequence = [];
+            setInteractionLog([], 'Recent colors');
         }
     }
 
@@ -346,6 +409,10 @@ function handleNumberPuzzleClick(object: THREE.Object3D): boolean {
 
     const number = object.userData.number;
     currentPuzzle.playerSequence.push(number);
+    if (currentPuzzle.playerSequence.length > currentPuzzle.sequence.length) {
+        currentPuzzle.playerSequence.shift();
+    }
+    setInteractionLog(currentPuzzle.playerSequence as number[], 'Recent numbers');
 
     const originalScale = object.scale.clone();
     object.scale.set(0.9, 0.9, 0.9);
@@ -449,6 +516,12 @@ function handlePatternPuzzleClick(object: THREE.Object3D): boolean {
 
     const tileIndex = object.userData.tileIndex;
     currentPuzzle.playerSequence.push(tileIndex);
+    const tileNames = ['RED', 'GREEN', 'BLUE', 'YELLOW'];
+    tileInteractionLog.push(tileNames[tileIndex] ?? String(tileIndex));
+    if (tileInteractionLog.length > currentPuzzle.sequence.length) {
+        tileInteractionLog.shift();
+    }
+    setInteractionLog(tileInteractionLog, 'Recent tiles');
 
     if (object instanceof THREE.Mesh && object.material instanceof THREE.MeshStandardMaterial) {
         object.material.emissiveIntensity = 1.0;
@@ -459,26 +532,27 @@ function handlePatternPuzzleClick(object: THREE.Object3D): boolean {
         }, 200);
     }
 
-    const currentIndex = currentPuzzle.playerSequence.length - 1;
-    const expectedTile = currentPuzzle.sequence[currentIndex] as number;
+    if (currentPuzzle.playerSequence.length === currentPuzzle.sequence.length) {
+        const matchesPattern = currentPuzzle.playerSequence.every(
+            (value, index) => value === currentPuzzle.sequence[index]
+        );
 
-    if (tileIndex === expectedTile) {
-        showMessage(`✓ Correct (${currentPuzzle.playerSequence.length}/${currentPuzzle.sequence.length})`, 1000);
-
-        if (currentPuzzle.playerSequence.length === currentPuzzle.sequence.length) {
+        if (matchesPattern) {
             completePuzzle();
-        }
-    } else {
-        currentPuzzle.attempts--;
-        currentPuzzle.playerSequence = [];
-
-        if (currentPuzzle.attempts > 0) {
-            showMessage(`✗ Wrong! Watch again. ${currentPuzzle.attempts} attempts remaining`, 2000);
-            setTimeout(showPatternSequence, 2000);
         } else {
-            showMessage(`✗ Puzzle failed! Restarting...`, 2000);
-            currentPuzzle.attempts = 3;
-            setTimeout(showPatternSequence, 2000);
+            currentPuzzle.attempts--;
+            currentPuzzle.playerSequence = [];
+            tileInteractionLog = [];
+            setInteractionLog([], 'Recent tiles');
+
+            if (currentPuzzle.attempts > 0) {
+                showMessage(`✗ Wrong! Watch again. ${currentPuzzle.attempts} attempts remaining`, 2000);
+                setTimeout(showPatternSequence, 2000);
+            } else {
+                showMessage(`✗ Puzzle failed! Restarting...`, 2000);
+                currentPuzzle.attempts = 3;
+                setTimeout(showPatternSequence, 2000);
+            }
         }
     }
 
@@ -491,10 +565,28 @@ function handleHiddenObjectClick(object: THREE.Object3D): boolean {
     scene.remove(object);
     currentPuzzle.objects = currentPuzzle.objects.filter(obj => obj !== object);
     currentPuzzle.playerSequence.push(object.userData.itemIndex);
+    setInteractionLog([`${currentPuzzle.playerSequence.length}/${currentPuzzle.totalItems}`], 'Items found');
 
     showMessage(`🔍 Found ${currentPuzzle.playerSequence.length}/${currentPuzzle.totalItems}!`, 1000);
 
     if (currentPuzzle.playerSequence.length === currentPuzzle.totalItems) {
+        completePuzzle();
+    }
+
+    return true;
+}
+
+function handleBonusCrystalClick(object: THREE.Object3D): boolean {
+    if (object.name !== 'puzzle_hidden_item' || !bonusCrystals.enabled) return false;
+
+    scene.remove(object);
+    bonusCrystals.objects = bonusCrystals.objects.filter(obj => obj !== object);
+    bonusCrystals.collected++;
+
+    setInteractionLog([`${bonusCrystals.collected}/${bonusCrystals.total}`], 'Crystals found');
+    showMessage(`💎 Crystals ${bonusCrystals.collected}/${bonusCrystals.total}`, 1000);
+
+    if (currentPuzzle.completed && bonusCrystals.collected >= bonusCrystals.total) {
         completePuzzle();
     }
 
@@ -541,6 +633,8 @@ function completePuzzle() {
     showMessage('🎉 Puzzle solved! The key has appeared!', 3000);
     console.log('Puzzle completed!');
 
+    clearBonusCrystals();
+    clearInteractionLog();
     window.dispatchEvent(new CustomEvent('puzzleSolved'));
 }
 
@@ -575,6 +669,8 @@ export function cleanupPuzzle() {
         completed: false,
         attempts: 3
     };
+    clearBonusCrystals();
+    clearInteractionLog();
 }
 
 function createNumberButton(number: number, position: { x: number; y: number; z: number }) {
@@ -718,21 +814,6 @@ function createAnswerBoard(roomOrigin: RoomOrigin, answerText: string, puzzleTyp
     currentPuzzle.objects.push(spotlight);
 
     console.log('📜 Answer board created with text:', answerText);
-}
-
-function shuffleArray<T>(array: T[]): void {
-    for (let i = array.length - 1; i > 0; i--) {
-        const j = Math.floor(Math.random() * (i + 1));
-        [array[i], array[j]] = [array[j], array[i]];
-    }
-}
-
-function generateCode(length: number): number[] {
-    const code: number[] = [];
-    for (let i = 0; i < length; i++) {
-        code.push(Math.floor(Math.random() * 10));
-    }
-    return code;
 }
 
 export function isPuzzleCompleted(): boolean {
