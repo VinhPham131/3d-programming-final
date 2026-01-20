@@ -58,7 +58,7 @@ export function createKeys() {
 
     const roomOrigin = getRoomOrigin(puzzleState.currentRoom);
 
-    const numKeys = Math.max(2, puzzleState.keysRequired || 2);
+    const numKeys = Math.max(1, puzzleState.keysRequired || 1);
 
     const roomSize = getRoomSize();
     const roomHalf = roomSize / 2;
@@ -137,6 +137,24 @@ export function removeKey(keyObject: THREE.Mesh) {
         keyMeshes.splice(index, 1);
         scene.remove(keyObject);
     }
+}
+
+export function clearKeys() {
+    while (keys.length > 0) {
+        const key = keys.pop();
+        if (key && key.parent) {
+            scene.remove(key);
+            if (key.geometry) key.geometry.dispose();
+            if (key.material) {
+                if (Array.isArray(key.material)) {
+                    key.material.forEach(m => m.dispose());
+                } else {
+                    key.material.dispose();
+                }
+            }
+        }
+    }
+    keyMeshes.length = 0;
 }
 
 export function getKeys() {
