@@ -194,8 +194,8 @@ export function hideVictory() {
 }
 
 function createConfetti() {
-    const colors = ['#FFD700', '#FF6B6B', '#4ECDC4', '#45B7D1', '#FFA07A', '#98D8C8', '#F7DC6F', '#BB8FCE'];
-    const confettiCount = 50;
+    const colors = ['#8b0000', '#5d0000', '#3d0000', '#1a0000', '#ff0000', '#660000', '#440000', '#220000'];
+    const confettiCount = 40;
 
     for (let i = 0; i < confettiCount; i++) {
         setTimeout(() => {
@@ -203,12 +203,16 @@ function createConfetti() {
             confetti.className = 'confetti';
             confetti.style.left = Math.random() * 100 + '%';
             confetti.style.backgroundColor = colors[Math.floor(Math.random() * colors.length)];
-            confetti.style.animationDelay = Math.random() * 3 + 's';
-            confetti.style.animationDuration = (Math.random() * 3 + 2) + 's';
+            confetti.style.animationDelay = Math.random() * 2 + 's';
+            confetti.style.animationDuration = (Math.random() * 4 + 3) + 's';
+            confetti.style.width = (Math.random() * 8 + 4) + 'px';
+            confetti.style.height = (Math.random() * 20 + 10) + 'px';
+            confetti.style.opacity = (Math.random() * 0.5 + 0.3).toString();
             document.body.appendChild(confetti);
 
             // Remove after animation ends
-            setTimeout(() => confetti.remove(), 5000);
-        }, i * 50);
+            setTimeout(() => confetti.remove(), 7000);
+        }, i * 70);
     }
 }
+

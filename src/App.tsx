@@ -14,10 +14,20 @@ function App() {
   }, []);
 
   const handleStartClick = () => {
+    console.log('Start overlay clicked!');
     setStartOverlayHidden(true);
     const startOverlay = document.getElementById("startOverlay");
     if (startOverlay) {
       startOverlay.classList.add("hidden");
+      setTimeout(() => {
+        startOverlay.style.display = 'none';
+      }, 500);
+    }
+    
+    // Start the game by locking the pointer
+    const canvas = document.querySelector('canvas');
+    if (canvas) {
+      canvas.click();
     }
   };
 
@@ -31,17 +41,20 @@ function App() {
         style={{ cursor: "pointer" }}
       >
         <div className="startContent">
-          <h1>🎮 3D ESCAPE ROOM</h1>
-          <p>🧩 Puzzle Edition</p>
-          <p style={{ marginTop: "30px" }}>
-            Solve puzzles • Collect keys • Escape the room<br />
-            Avoid NPCs • Beat the clock
+          <h1>💀 ESCAPE THE NIGHTMARE 💀</h1>
+          <p className="subtitle">Horror Puzzle Edition</p>
+          <p style={{ marginTop: "30px", color: "rgba(200, 200, 200, 0.9)" }}>
+            Solve deadly puzzles • Find hidden keys • Survive<br />
+            Evade the darkness • Time is running out
           </p>
           <p className="highlight" style={{ marginTop: "40px" }}>
-            👆 CLICK TO START 👆
+            ⚠️ ENTER IF YOU DARE ⚠️
           </p>
-          <p style={{ fontSize: "0.9rem", marginTop: "20px", color: "rgba(255,255,255,0.6)" }}>
-            WASD - Move | Mouse - Rotate | E - Interact
+          <p style={{ fontSize: "0.9rem", marginTop: "20px", color: "rgba(139, 0, 0, 0.8)" }}>
+            WASD - Move | Mouse - Look Around | E - Interact
+          </p>
+          <p style={{ fontSize: "0.8rem", marginTop: "10px", color: "rgba(100, 100, 100, 0.8)", fontStyle: "italic" }}>
+            Warning: Not for the faint of heart...
           </p>
         </div>
       </div>
@@ -74,17 +87,17 @@ function App() {
       {/* Victory Screen */}
       <div id="victoryScreen">
         <div className="victoryContent">
-          <h1>🎉 CHIẾN THẮNG! 🎉</h1>
-          <div className="trophy">🏆</div>
-          <div className="stars">⭐ ⭐ ⭐</div>
+          <h1>YOU ESCAPED...</h1>
+          <div className="skull">💀</div>
+          <div className="glitchText">But at what cost?</div>
           <div className="victoryStats">
-            <div><strong>CONGRATULATIONS!</strong></div>
-            <div>You completed all rooms!</div>
+            <div><strong>SURVIVAL STATISTICS</strong></div>
+            <div>You managed to escape the nightmare...</div>
             <div id="victoryTime">Time: --:--</div>
-            <div id="victoryRooms">Rooms completed: 0</div>
+            <div id="victoryRooms">Rooms survived: 0</div>
           </div>
           <button className="playAgainButton" onClick={() => (window as any).restartGame()}>
-            PLAY AGAIN
+            ENTER AGAIN
           </button>
         </div>
       </div>

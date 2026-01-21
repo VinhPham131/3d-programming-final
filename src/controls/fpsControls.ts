@@ -10,7 +10,14 @@ const instructions = document.getElementById('instructions');
 const startOverlay = document.getElementById('startOverlay');
 let firstClick = true;
 
-document.addEventListener('click', () => {
+document.addEventListener('click', (event) => {
+    // Don't lock if clicking on the start overlay - let React handle it
+    const target = event.target as HTMLElement;
+    if (target && (target.id === 'startOverlay' || target.closest('#startOverlay'))) {
+        console.log('[fpsControls] Click on start overlay, skipping pointer lock');
+        return;
+    }
+    
     if (!controls.isLocked) {
         controls.lock();
         console.log('[fpsControls] Requesting pointer lock');
