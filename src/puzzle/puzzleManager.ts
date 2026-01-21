@@ -4,6 +4,7 @@ import { showMessage, setInteractionLog, clearInteractionLog } from '../hud/hud'
 import { puzzleState } from '../constants/constant';
 import { getRoomOrigin } from '../core/roomManager';
 import { RoomOrigin, ColorData, MathData, PuzzleState, PuzzleType } from '../interface/interface';
+import { playWrongAnswerSound, playSuccessSound } from '../audio/audioManager';
 
 let currentPuzzle: PuzzleState = {
     type: null,
@@ -396,6 +397,7 @@ function handleColorPuzzleClick(object: THREE.Object3D): boolean {
     } else {
         showMessage(`${colorNames[clickedColor]}`, 800);
         if (isCompleteAttempt) {
+            playWrongAnswerSound(); // Play error sound when wrong sequence is complete
             currentPuzzle.playerSequence = [];
             setInteractionLog([], 'Recent colors');
         }
@@ -443,6 +445,7 @@ function handleNumberPuzzleClick(object: THREE.Object3D): boolean {
             if (enteredCode === correctCode) {
                 completePuzzle();
             } else {
+                playWrongAnswerSound(); // Play error sound
                 currentPuzzle.attempts--;
                 const wrongSequence = currentPuzzle.playerSequence.join('');
                 currentPuzzle.playerSequence = [];
@@ -480,6 +483,7 @@ function handleNumberPuzzleClick(object: THREE.Object3D): boolean {
         if (correct) {
             completePuzzle();
         } else {
+            playWrongAnswerSound(); // Play error sound
             currentPuzzle.attempts--;
             const wrongSequence = currentPuzzle.playerSequence.join('');
             currentPuzzle.playerSequence = [];
@@ -540,6 +544,7 @@ function handlePatternPuzzleClick(object: THREE.Object3D): boolean {
         if (matchesPattern) {
             completePuzzle();
         } else {
+            playWrongAnswerSound(); // Play error sound
             currentPuzzle.attempts--;
             currentPuzzle.playerSequence = [];
             tileInteractionLog = [];
@@ -618,6 +623,9 @@ function showPatternSequence() {
 function completePuzzle() {
     currentPuzzle.completed = true;
     puzzleState.puzzleSolved = true;
+
+    // Play success sound when puzzle is completed
+    playSuccessSound();
 
     currentPuzzle.objects.forEach(obj => {
         if (obj.name === 'answer_board' || obj.type === 'SpotLight') {

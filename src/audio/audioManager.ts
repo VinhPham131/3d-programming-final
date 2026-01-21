@@ -234,6 +234,69 @@ export function playNPCChaseSound() {
     }
 }
 
+// Play wrong answer sound (error/fail sound)
+export function playWrongAnswerSound() {
+    const context = audioListener.context;
+    
+    // Create a harsh, dissonant sound for wrong answer
+    const oscillator1 = context.createOscillator();
+    const oscillator2 = context.createOscillator();
+    const gainNode = context.createGain();
+
+    oscillator1.type = 'sawtooth';
+    oscillator2.type = 'square';
+    
+    // Dissonant frequencies
+    oscillator1.frequency.setValueAtTime(200, context.currentTime);
+    oscillator2.frequency.setValueAtTime(210, context.currentTime); // Slightly off for dissonance
+    
+    // Descending pitch for "failure" feeling
+    oscillator1.frequency.exponentialRampToValueAtTime(100, context.currentTime + 0.3);
+    oscillator2.frequency.exponentialRampToValueAtTime(105, context.currentTime + 0.3);
+
+    gainNode.gain.setValueAtTime(0.3, context.currentTime);
+    gainNode.gain.exponentialRampToValueAtTime(0.01, context.currentTime + 0.3);
+
+    oscillator1.connect(gainNode);
+    oscillator2.connect(gainNode);
+    gainNode.connect(context.destination);
+
+    oscillator1.start();
+    oscillator2.start();
+    oscillator1.stop(context.currentTime + 0.3);
+    oscillator2.stop(context.currentTime + 0.3);
+
+    console.log('❌ Wrong answer sound played');
+}
+
+// Play success sound (puzzle solved)
+export function playSuccessSound() {
+    const context = audioListener.context;
+
+    // Success melody with ascending notes
+    const notes = [523, 659, 784, 1047]; // C5, E5, G5, C6 (major chord progression)
+    notes.forEach((freq, index) => {
+        setTimeout(() => {
+            const oscillator = context.createOscillator();
+            const gainNode = context.createGain();
+
+            oscillator.type = 'sine';
+            oscillator.frequency.setValueAtTime(freq, context.currentTime);
+
+            gainNode.gain.setValueAtTime(0.25, context.currentTime);
+            gainNode.gain.exponentialRampToValueAtTime(0.01, context.currentTime + 0.4);
+
+            oscillator.connect(gainNode);
+            gainNode.connect(context.destination);
+
+            oscillator.start();
+            oscillator.stop(context.currentTime + 0.4);
+        }, index * 150);
+    });
+
+    console.log('✅ Success sound played');
+}
+
 export function stopAllSounds() {
     // Web Audio API oscillators automatically stop
     console.log('All sounds stopped');
